@@ -12,14 +12,6 @@ import ReactLoading from 'react-loading';
 import io from "socket.io-client";
 import axios from 'axios';
 
-const cCode =
-    `#include <stdio.h>
-
-int main() {
-    printf("CodeSpace");
-    return 0;
-}`
-
 const cppCode =
     `#include <bits/stdc++.h>
 using namespace std;
@@ -37,6 +29,24 @@ const javaCode =
             System.out.println("CodeSpace");
         }
 }`
+
+const golangCode =
+    `package main
+import "fmt"
+
+func main() {
+    fmt.Println("CodeSpace")
+}`
+
+const csharpCode =
+    `using System;
+
+class Program {
+    static void Main() {
+        Console.WriteLine("CodeSpace");
+    }
+}
+`
 
 const startingCode = cppCode;
 
@@ -84,10 +94,11 @@ function EditorPage() {
 
         socket.on("LANGUAGE-CHANGE", (language) => {
             setLanguage(language);
-            if (language === 'c') setCode(cCode)
-            if (language === 'cpp') setCode(cppCode)
-            if (language === 'python') setCode(pythonCode)
-            if (language === 'java') setCode(javaCode)
+            if (language === 'cpp') setCode(cppCode);
+            if (language === 'python') setCode(pythonCode);
+            if (language === 'java') setCode(javaCode);
+            if (language === 'go') setCode(golangCode);
+            if (language === 'c#') setCode(csharpCode);
         });
 
         socket.on("THEME-CHANGE", (theme) => {
@@ -148,10 +159,12 @@ function EditorPage() {
 
     const handleLanguageChange = (language) => {
         setLanguage(language);
-        if (language === 'c') setCode(cCode)
-        if (language === 'cpp') setCode(cppCode)
-        if (language === 'python') setCode(pythonCode)
-        if (language === 'java') setCode(javaCode)
+        if (language === 'cpp') setCode(cppCode);
+        if (language === 'python') setCode(pythonCode);
+        if (language === 'java') setCode(javaCode);
+        if (language === 'go') setCode(golangCode);
+        if (language === 'c#') setCode(csharpCode);
+
         socket.emit("LANGUAGE-CHANGE", language);
     };
 
@@ -184,51 +197,63 @@ function EditorPage() {
         setOutput('Running...');
         socket.emit("OUTPUT-CHANGE", 'Running...');
 
-        const headers = {
-            'content-type': 'application/json',
-            'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
-            'x-rapidapi-key': process.env.REACT_APP_RAPID_API_JUDGE
-        };
+        let codeLanguage;
+        if (language === 'cpp') codeLanguage = 'c_cpp';
+        if (language === 'python') codeLanguage = 'python';
+        if (language === 'java') codeLanguage = 'java';
+        if (language === 'go') codeLanguage = 'golang';
+        if (language === 'c#') codeLanguage = 'csharp';
 
-        let id;
-        if (language === 'python') id = 71;
-        if (language === 'c') id = 50;
-        if (language === 'cpp') id = 54;
-        if (language === 'java') id = 62;
-
-        const data = {
-            source_code: code,
-            language_id: id,
-            stdin: input
+        const options = {
+            method: 'POST',
+            url: 'https://code-compiler10.p.rapidapi.com/',
+            headers: {
+                'content-type': 'application/json',
+                'x-compile': 'rapidapi',
+                'Content-Type': 'application/json',
+                'X-RapidAPI-Key': process.env.REACT_APP_RAPID_API_JUDGE,
+                'X-RapidAPI-Host': 'code-compiler10.p.rapidapi.com'
+            },
+            data: {
+                langEnum: [
+                    'php',
+                    'python',
+                    'c',
+                    'c_cpp',
+                    'csharp',
+                    'kotlin',
+                    'golang',
+                    'r',
+                    'java',
+                    'typescript',
+                    'nodejs',
+                    'ruby',
+                    'perl',
+                    'swift',
+                    'fortran',
+                    'bash'
+                ],
+                lang: codeLanguage,
+                code: code,
+                input: input
+            }
         };
 
         try {
-            let responseToken;
-            await axios.post('https://judge0-ce.p.rapidapi.com/submissions', data, { headers })
-                .then(response => {
-                    console.log(response.data);
-                    responseToken = response.data.token;
-                })
-                .catch(error => {
-                    console.log(error);
-                    setOutput(error);
-                    socket.emit("OUTPUT-CHANGE", error);
-                });
-
-            await axios.get(`https://judge0-ce.p.rapidapi.com/submissions/${responseToken}`, { headers })
-                .then(response => {
-                    if (response.data.stdout !== null) setOutput(response.data.stdout);
-                    else setOutput('Error');
-                    socket.emit("OUTPUT-CHANGE", response.data.stdout);
-                })
-                .catch(error => {
-                    setOutput(error);
-                    socket.emit("OUTPUT-CHANGE", error.data.stdout);
-                });
-        }
-        catch (error) {
-            setOutput(error);
-            socket.emit("OUTPUT-CHANGE", error.data.stdout);
+            const response = await axios.request(options);
+            console.log(response.data);
+            if (response.data.output !== "") {
+                setOutput(response.data.output);
+                socket.emit("OUTPUT-CHANGE", response.data.output);
+            }
+            else {
+                setOutput("Error");
+                socket.emit("OUTPUT-CHANGE", "Error");
+            }
+        } catch (error) {
+            console.error(error);
+            setOutput("Error");
+            socket.emit("OUTPUT-CHANGE", "Error");
         }
     };
 

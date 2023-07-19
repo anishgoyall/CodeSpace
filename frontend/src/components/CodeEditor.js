@@ -5,10 +5,11 @@ import { GoFileCode } from 'react-icons/go';
 import { AiFillCaretRight } from 'react-icons/ai';
 
 const languages = [
-    { value: "c", label: "C" },
     { value: "cpp", label: "C++" },
     { value: "python", label: "Python" },
     { value: "java", label: "Java" },
+    { value: "go", label: "Go" },
+    { value: "c#", label: "C#" },
 ];
 
 const themes = [
