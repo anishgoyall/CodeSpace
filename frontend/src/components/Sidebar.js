@@ -36,7 +36,10 @@ function Sidebar({ users, handleCopyRoomId, handleLeave, message, setMessage, me
                     </div>
                     <Popup
                         trigger={<button type='button' className=' hover:bg-zinc-600 bg-zinc-700 text-gray-300
-                          font-bold px-4 py-2 rounded'><FontAwesomeIcon icon={faUserGroup} /> Participants [ {users.length} ]</button>}
+                          font-bold px-4 py-2 rounded'><FontAwesomeIcon icon={faUserGroup} /> 
+                            Participants [ {users.length === 0 ? 1 : users.length} ]
+                            </button>
+                            }
                         position={'bottom center'}
                     >
                         <UserList users={users} />
